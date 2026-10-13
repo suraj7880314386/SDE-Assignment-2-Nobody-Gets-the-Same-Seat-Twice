@@ -3,19 +3,19 @@
 Thread-safe in-memory ticket hold engine in Python 3 (standard library only).
 
 ## Run the tests
-    python -m unittest discover -s tests -v
+    python -m unittest discover -s . -p "test_*.py" -v
 
-The stress and model tests print their seed. Replay inputs with `SEED=<n> python -m unittest discover -s tests`.
+The stress and model tests print their seed. Replay inputs with `SEED=<n> python -m unittest discover -s . -p "test_*.py"`.
 Threads still interleave differently each run, so a stress failure may need a few reruns. The model test is fully repeatable.
 
 ## Use it
     from hold_engine import HoldEngine, FakeClock
     clock = FakeClock()
     e = HoldEngine(["A1", "A2"], clock=clock)
-    h = e.hold("A1", "alice", 30)
+    h = e.hold("A1", "suraj", 30)
     clock.advance(10)
     e.confirm(h)
-    e.seat_status("A1")        # Sold(user='alice')
+    e.seat_status("A1")        # Sold(user='suraj')
 
 API: `hold`, `hold_many`, `confirm`, `release`, `seat_status`. Errors are `HoldError` subclasses.
 The clock is any function returning seconds (default `time.monotonic`).
