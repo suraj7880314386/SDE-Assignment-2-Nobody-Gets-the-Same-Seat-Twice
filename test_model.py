@@ -10,9 +10,6 @@ USERS = ["u1", "u2", "u3"]
 
 
 class Model:
-    """Dumb reference. Keeps every hold forever and works out everything from scratch.
-    A hold can still be confirmed only if it is the newest hold ever made on its seat
-    and was not released or confirmed."""
 
     def __init__(self, clock):
         self.clock, self.holds = clock, []
