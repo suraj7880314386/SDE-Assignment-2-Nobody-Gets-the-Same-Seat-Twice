@@ -28,14 +28,14 @@ class Rules(unittest.TestCase):
         self.e.hold("A", "u1", 10)
         self.clock.advance(9.99)
         self.assertIsInstance(self.e.seat_status("A"), Held)
-        self.clock.advance(0.01)  # now == expires_at counts as expired
+        self.clock.advance(0.01) 
         self.assertEqual(self.e.seat_status("A"), Free())
         self.assertTrue(self.e.hold("A", "u2", 10))
 
     def test_r3_expired_but_untaken_can_be_confirmed(self):
         h = self.e.hold("A", "u1", 5)
         self.clock.advance(100)
-        self.assertEqual(self.e.seat_status("A"), Free())  # not extended, shows free
+        self.assertEqual(self.e.seat_status("A"), Free())  
         self.assertTrue(self.e.confirm(h))
         self.assertEqual(self.e.seat_status("A"), Sold("u1"))
 
@@ -70,7 +70,7 @@ class Rules(unittest.TestCase):
         ids = [self.e.hold(s, "u1", 10) for s in "ABCD"]
         with self.assertRaises(HoldLimitExceeded):
             self.e.hold("E", "u1", 10)
-        self.assertEqual(self.e.hold("A", "u1", 10), ids[0])  # retry is not a 5th hold
+        self.assertEqual(self.e.hold("A", "u1", 10), ids[0])  
         self.e.release(ids[1])
         self.assertTrue(self.e.hold("E", "u1", 10))
 
@@ -87,7 +87,7 @@ class Rules(unittest.TestCase):
         self.clock.advance(6)
         for s in "BCDE":
             self.e.hold(s, "u1", 50)
-        self.assertTrue(self.e.confirm(old))   # sold seats don't count as holds
+        self.assertTrue(self.e.confirm(old))   
         self.assertEqual(self.e.active_hold_count("u1"), 4)
 
     def test_r6_all_or_nothing(self):
@@ -111,19 +111,19 @@ class Rules(unittest.TestCase):
         ids = self.e.hold_many("u1", ["A", "B", "B", "C", "D"], 10)
         self.assertEqual(len(ids), 4)
         self.assertEqual(ids[0], a)
-        self.assertEqual(len(set(ids)), 4)  # duplicate B collapsed
-        self.assertEqual(self.e.active_hold_count("u1"), 4)  # A was not counted twice
+        self.assertEqual(len(set(ids)), 4)  
+        self.assertEqual(self.e.active_hold_count("u1"), 4)  
         self.assertEqual(self.e.hold_many("u1", [], 10), [])
 
     def test_confirm_release_edges(self):
         h = self.e.hold("A", "u1", 10)
         self.assertTrue(self.e.confirm(h))
-        self.assertTrue(self.e.confirm(h))      # idempotent
+        self.assertTrue(self.e.confirm(h))      
         with self.assertRaises(AlreadySold):
             self.e.release(h)
         g = self.e.hold("B", "u1", 10)
         self.assertTrue(self.e.release(g))
-        self.assertTrue(self.e.release(g))      # idempotent
+        self.assertTrue(self.e.release(g))   
         with self.assertRaises(HoldReleased):
             self.e.confirm(g)
         with self.assertRaises(UnknownHold):
