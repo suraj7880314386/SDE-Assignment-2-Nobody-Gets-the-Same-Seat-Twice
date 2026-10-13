@@ -17,7 +17,6 @@ class NullLock:
 
 
 class BrokenEngine(HoldEngine):
-    """No locks + a pause between check and write. The stress test must catch this."""
     def __init__(self, *a, **k):
         super().__init__(*a, lock_factory=NullLock, **k)
 
