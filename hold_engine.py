@@ -1,4 +1,3 @@
-"""In-memory, thread-safe seat hold engine. Rule choices are in DECISIONS.md."""
 import math
 import threading
 import time
@@ -35,7 +34,7 @@ class HoldLimitExceeded(HoldError):
 
 
 class HoldExpired(HoldError):
-    """Hold ran out AND someone else took the seat afterwards."""
+    pass
 
 
 class HoldReleased(HoldError):
@@ -90,7 +89,7 @@ class _Hold:
 class _Seat:
     def __init__(self, lock):
         self.lock = lock
-        self.current = None   # latest ACTIVE hold (may be expired but still revivable)
+        self.current = None   
         self.sold_to = None
         self.history = []
 
@@ -107,13 +106,12 @@ class HoldEngine:
         self._clock = clock
         self._lock_factory = lock_factory
         self._seats = {s: _Seat(lock_factory()) for s in seat_ids}
-        self._reg_lock = threading.Lock()   # guards _holds, _users, id counter
+        self._reg_lock = threading.Lock()  
         self._holds = {}
         self._users = {}
         self._next_id = 1
         self._record = record_history
 
-    # ---------- public API ----------
 
     def hold(self, seat_id, user_id, ttl_seconds):
         return self.hold_many(user_id, [seat_id], ttl_seconds)[0]
@@ -147,13 +145,13 @@ class HoldEngine:
             if self._active_count(user_id, now) + len(fresh) > MAX_HOLDS_PER_USER:
                 raise HoldLimitExceeded(user_id)
 
-            self._pause()  # test hook, no-op normally
+            self._pause()  
 
             user = self._user(user_id)
             for s in fresh:
                 seat = self._seats[s]
                 if seat.current is not None:
-                    seat.current.status = _SUPERSEDED   # expired and now taken
+                    seat.current.status = _SUPERSEDED   
                 h = self._new_hold(s, user_id, now + ttl_seconds)
                 seat.current = h
                 user.hold_ids.add(h.id)
@@ -207,7 +205,6 @@ class HoldEngine:
                 return Held(cur.user, cur.expires_at)
             return Free()
 
-    # ---------- helpers used by tests ----------
 
     def active_hold_count(self, user_id):
         with self._user(user_id).lock:
@@ -242,7 +239,6 @@ class HoldEngine:
         for u, n in per_user.items():
             _require(n <= MAX_HOLDS_PER_USER, "user %s has %d live holds" % (u, n))
 
-    # ---------- internals ----------
 
     def _pause(self):
         pass
@@ -278,8 +274,6 @@ class HoldEngine:
             return h
 
     def _active_count(self, user_id, now):
-        # Caller holds the user lock. A SUPERSEDED hold is always already expired
-        # (clock is monotonic), so reading status without the seat lock is safe.
         user = self._user(user_id)
         n = 0
         for hid in list(user.hold_ids):
@@ -292,7 +286,6 @@ class HoldEngine:
 
     @contextmanager
     def _locked(self, user_id, seat_ids):
-        # Order: user lock first, then seat locks in sorted order.
         locks = [self._user(user_id).lock] + [self._seats[s].lock for s in sorted(set(seat_ids))]
         taken = []
         try:
